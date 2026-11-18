@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#481626">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GIM SAVINGS">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>GIM Savings</title>
+<style>
+:root{--wine:#481626;--wine2:#64263c;--wine3:#78384d;--gold:#e2bd76;--gold2:#f4dba7;--cream:#fff5e5;--muted:#d9bdab}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(155deg,#35101d,#551c31 55%,#32101d);color:var(--cream);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:env(safe-area-inset-top) 14px calc(22px + env(safe-area-inset-bottom));min-height:100vh}
+main{max-width:650px;margin:auto}.hero{text-align:center;padding:25px 10px 18px}.crown{font-size:25px;color:var(--gold)}.brand{font-family:Georgia,serif;letter-spacing:5px;font-size:34px;color:var(--gold2);font-weight:bold;margin:6px 0}.sub{font-size:11px;letter-spacing:2.2px;color:var(--muted)}
+.panel{background:rgba(255,245,229,.075);border:1px solid rgba(226,189,118,.3);border-radius:19px;padding:17px;margin:13px 0;box-shadow:0 8px 24px #21081140}
+.summary{text-align:center;background:linear-gradient(135deg,#6a2a41,#4b182b)}.eyebrow{font-size:11px;letter-spacing:2px;color:var(--gold2)}.total{font-family:Georgia,serif;font-size:36px;color:var(--gold2);margin:8px 0 15px;font-weight:bold}.stats{display:flex;justify-content:space-between;font-size:13px;color:#f7e7d3;margin-bottom:8px}.track{height:10px;border-radius:20px;background:#35101d;overflow:hidden}.fill{height:100%;width:0;background:linear-gradient(90deg,#c3924b,#ffe4a5);border-radius:20px;transition:width .2s}.percent{text-align:center;color:var(--gold2);font-size:12px;margin-top:8px}
+.section-title{font-family:Georgia,serif;color:var(--gold2);font-size:21px;margin:0 0 7px}.hint{font-size:12px;color:var(--muted);line-height:1.45;margin:0 0 15px}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.page-label{font-size:13px;color:var(--gold2);font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.cell{min-height:58px;border-radius:11px;border:1px solid #a56d6f;background:#71364a;color:#fff0d9;font-weight:700;font-size:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;-webkit-tap-highlight-color:transparent}.cell.done{background:linear-gradient(145deg,#f0d394,#c89b53);border-color:#ffe8b5;color:#35101d}.cell:active{transform:scale(.96)}.tick{font-size:12px}
+button{font:inherit}.navbtn,.reset{border:1px solid #c79d65;background:#5a2035;color:#ffe9c5;padding:10px 14px;border-radius:12px;font-weight:600}.navbtn:disabled{opacity:.35}.pages{display:flex;align-items:center;gap:12px}
+.breakdown{display:grid;gap:10px}.break-row{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:#f7e7d3}.break-row strong{color:var(--gold2);font-variant-numeric:tabular-nums}
+.bottom{display:flex;justify-content:center;margin-top:14px}.reset{background:transparent;font-size:12px;color:#e8c9b0}.foot{text-align:center;color:#d7b18b;font-size:11px;letter-spacing:1px;padding:18px 0 5px}
+@media(min-width:520px){.grid{grid-template-columns:repeat(8,minmax(0,1fr))}.cell{min-height:62px}}
+</style>
+</head>
+<body>
+<main>
+<header class="hero"><div class="crown">✦ ♛ ✦</div><div class="brand">GIM'S</div><div class="sub">SAVINGS CHALLENGE</div></header>
+<section class="panel summary">
+<div class="eyebrow">YOUR TOTAL SAVED</div><div class="total" id="total">Rs. 0</div>
+<div class="stats"><span>Completed boxes</span><strong id="count">0 / 865</strong></div>
+<div class="track"><div class="fill" id="fill"></div></div><div class="percent" id="percent">0.0% completed</div>
+</section>
+<section class="panel">
+<h2 class="section-title">Your money boxes</h2>
+<p class="hint">Tap a box after adding that amount to your savings box. Tap it again if you want to undo it. Your progress is saved on this iPhone.</p>
+<div class="toolbar"><span class="page-label" id="pageLabel">Boxes 1–50</span><div class="pages"><button class="navbtn" id="prev" aria-label="Previous page">‹</button><span id="pageNum" class="page-label">1 / 18</span><button class="navbtn" id="next" aria-label="Next page">›</button></div></div>
+<div class="grid" id="grid"></div>
+</section>
+<section class="panel">
+<h2 class="section-title">Savings breakdown</h2><div class="breakdown" id="breakdown"></div>
+<hr style="border:0;border-top:1px solid #9c705d;margin:14px 0">
+<div class="break-row"><strong>Total target</strong><strong>Rs. 104,500</strong></div>
+</section>
+<div class="bottom"><button class="reset" id="reset">Reset all progress</button></div>
+<footer class="foot">GIM · SAVE LITTLE, DREAM BIG ✨</footer>
+</main>
+<script>
+const denominations=[{amount:20,count:300},{amount:50,count:200},{amount:500,count:100},{amount:1000,count:15},{amount:70,count:50},{amount:100,count:200}];
+const TOTAL=denominations.reduce((s,x)=>s+x.count,0), PAGE_SIZE=50, TARGET=104500;
+let page=0, marked=new Set();
+try{const saved=JSON.parse(localStorage.getItem('gimSavingsMarked')||'[]');if(Array.isArray(saved))marked=new Set(saved.filter(x=>Number.isInteger(x)&&x>=0&&x<TOTAL));}catch(e){}
+function makeBoxes(){let arr=denominations.flatMap(x=>Array(x.count).fill(x.amount));for(let i=arr.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+let boxes;try{let stored=JSON.parse(localStorage.getItem('gimSavingsBoxes')||'null');boxes=Array.isArray(stored)&&stored.length===TOTAL?stored:makeBoxes();}catch(e){boxes=makeBoxes();}
+localStorage.setItem('gimSavingsBoxes',JSON.stringify(boxes));
+const money=n=>'Rs. '+n.toLocaleString('en-US');
+function save(){localStorage.setItem('gimSavingsMarked',JSON.stringify([...marked]));}
+function render(){
+ const sum=[...marked].reduce((s,i)=>s+boxes[i],0), done=marked.size;
+ document.getElementById('total').textContent=money(sum);
+ document.getElementById('count').textContent=done+' / '+TOTAL;
+ document.getElementById('fill').style.width=(done/TOTAL*100)+'%';
+ document.getElementById('percent').textContent=(done/TOTAL*100).toFixed(1)+'% completed';
+ const start=page*PAGE_SIZE,end=Math.min(start+PAGE_SIZE,TOTAL);
+ document.getElementById('pageLabel').textContent=`Boxes ${start+1}–${end}`;
+ document.getElementById('pageNum').textContent=`${page+1} / ${Math.ceil(TOTAL/PAGE_SIZE)}`;
+ document.getElementById('prev').disabled=page===0;
+ document.getElementById('next').disabled=end===TOTAL;
+ const grid=document.getElementById('grid');grid.innerHTML='';
+ for(let i=start;i<end;i++){const b=document.createElement('button');b.className='cell'+(marked.has(i)?' done':'');b.type='button';b.setAttribute('aria-label',`Rupees ${boxes[i]} ${marked.has(i)?'completed':'not completed'}`);b.innerHTML=marked.has(i)?`<span class="tick">✓ SAVED</span><span>${boxes[i].toLocaleString('en-US')}</span>`:`<span>${boxes[i].toLocaleString('en-US')}</span>`;b.addEventListener('click',()=>{marked.has(i)?marked.delete(i):marked.add(i);save();render();});grid.appendChild(b);}
+ const breakdown=document.getElementById('breakdown');
+ breakdown.innerHTML=denominations.map(d=>`<div class="break-row"><span>Rs. ${d.amount.toLocaleString('en-US')} × ${d.count}</span><strong>${money(d.amount*d.count)}</strong></div>`).join('');
+}
+document.getElementById('prev').addEventListener('click',()=>{page=Math.max(0,page-1);render();});
+document.getElementById('next').addEventListener('click',()=>{page=Math.min(Math.ceil(TOTAL/PAGE_SIZE)-1,page+1);render();});
+document.getElementById('reset').addEventListener('click',()=>{if(confirm('Reset all 865 boxes? This cannot be undone.')){marked.clear();save();render();}});
+if('serviceWorker' in navigator && location.protocol!=='file:'){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}
+render();
+</script>
+</body></html>
